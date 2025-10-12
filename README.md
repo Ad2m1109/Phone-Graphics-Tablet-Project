@@ -1,16 +1,26 @@
-# phone_graphics_tablet_project
+## **1. Project Overview**
 
-A new Flutter project.
+### **1.1 Project Title**
 
-## Getting Started
+Phone Graphics Tablet (PGT) - Mobile to PC Drawing Interface
 
-This project is a starting point for a Flutter application.
+### **1.2 Project Description**
 
-A few resources to get you started if this is your first Flutter project:
+A cross-platform application that transforms smartphones into graphic tablets, allowing users to draw on their phone screen and see the results in real-time on their PC. The system enables cost-effective digital drawing by leveraging existing mobile devices.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### **1.3 Problem Statement**
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Professional graphic tablets are expensive ($100-$2000+), creating barriers for:
+
+- Digital art students
+    
+- Hobbyist artists
+    
+- Beginner digital creators
+    
+- Professionals needing secondary tablets
+    
+
+### **1.4 Solution**
+
+Utilize smartphone touchscreens as input devices, transmitting drawing data to PC software that mimics professional tablet functionality.
