@@ -25,8 +25,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  List<Offset?> points = <Offset?>[];
 
   @override
   Widget build(BuildContext context) {
@@ -48,11 +55,54 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: const Center(
-        child: Text('Drawing Canvas Area'),
+      body: GestureDetector(
+        onPanUpdate: (details) {
+          setState(() {
+            RenderBox renderBox = context.findRenderObject() as RenderBox;
+            points.add(renderBox.globalToLocal(details.globalPosition));
+          });
+        },
+        onPanStart: (details) {
+          setState(() {
+            RenderBox renderBox = context.findRenderObject() as RenderBox;
+            points.add(renderBox.globalToLocal(details.globalPosition));
+          });
+        },
+        onPanEnd: (details) {
+          setState(() {
+            points.add(null);
+          });
+        },
+        child: CustomPaint(
+          painter: DrawingPainter(points),
+          child: Container(),
+        ),
       ),
     );
   }
+}
+
+class DrawingPainter extends CustomPainter {
+  DrawingPainter(this.points);
+
+  final List<Offset?> points;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint paint = Paint()
+      ..color = Colors.black
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 5.0;
+
+    for (int i = 0; i < points.length - 1; i++) {
+      if (points[i] != null && points[i + 1] != null) {
+        canvas.drawLine(points[i]!, points[i + 1]!, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(DrawingPainter oldDelegate) => oldDelegate.points != points;
 }
 
 class SettingsScreen extends StatelessWidget {
