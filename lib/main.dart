@@ -171,8 +171,40 @@ class HelpScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Help'),
       ),
-      body: const Center(
-        child: Text('Help Screen'),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: const [
+          Text(
+            'Setup Instructions',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 10),
+          Text(
+            '1. Connect your phone and PC to the same WiFi network.\n'
+            '2. Open the PGT server application on your PC.\n'
+            '3. The app will automatically detect the server, or you can enter the IP address manually in the settings.\n'
+            '4. Once connected, the drawing canvas will be active.',
+          ),
+          SizedBox(height: 20),
+          Text(
+            'User Guide',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 10),
+          Text(
+            'Use your finger or a stylus to draw on the canvas. The drawing will appear in real-time on your PC. Use the toolbar at the bottom to change tools, colors, and other settings.',
+          ),
+          SizedBox(height: 20),
+          Text(
+            'Frequently Asked Questions (FAQ)',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 10),
+          Text(
+            'Q: I can\'t connect to my PC.\n'
+            'A: Make sure both devices are on the same WiFi network and that the server application is running on your PC. Check your firewall settings to ensure the PGT application is not blocked.',
+          ),
+        ],
       ),
     );
   }
