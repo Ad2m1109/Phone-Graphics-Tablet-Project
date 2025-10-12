@@ -11,6 +11,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Phone Graphics Tablet',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -105,8 +106,16 @@ class DrawingPainter extends CustomPainter {
   bool shouldRepaint(DrawingPainter oldDelegate) => oldDelegate.points != points;
 }
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool _isBluetoothEnabled = true;
+  bool _isWifiEnabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -114,8 +123,40 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Settings'),
       ),
-      body: const Center(
-        child: Text('Settings Screen'),
+      body: ListView(
+        children: [
+          ListTile(
+            title: const Text('Connect to PC'),
+            subtitle: const Text('IP Address: 192.168.1.100'), // Placeholder
+            leading: const Icon(Icons.computer),
+            onTap: () {
+              // TODO: Implement PC connection logic
+            },
+          ),
+          const Divider(),
+          SwitchListTile(
+            title: const Text('Bluetooth'),
+            subtitle: const Text('Enable or disable Bluetooth'),
+            value: _isBluetoothEnabled,
+            onChanged: (bool value) {
+              setState(() {
+                _isBluetoothEnabled = value;
+              });
+            },
+            secondary: const Icon(Icons.bluetooth),
+          ),
+          SwitchListTile(
+            title: const Text('WiFi'),
+            subtitle: const Text('Enable or disable WiFi'),
+            value: _isWifiEnabled,
+            onChanged: (bool value) {
+              setState(() {
+                _isWifiEnabled = value;
+              });
+            },
+            secondary: const Icon(Icons.wifi),
+          ),
+        ],
       ),
     );
   }
