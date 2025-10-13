@@ -1,11 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:phone_graphics_tablet_project/connection_service.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late ConnectionService _connectionService;
+
+  @override
+  void initState() {
+    super.initState();
+    _connectionService = ConnectionService();
+  }
+
+  @override
+  void dispose() {
+    _connectionService.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +40,9 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => const HomeScreen(),
-        '/settings': (context) => const SettingsScreen(),
+        '/': (context) => HomeScreen(connectionService: _connectionService),
+        '/settings': (context) =>
+            SettingsScreen(connectionService: _connectionService),
         '/help': (context) => const HelpScreen(),
       },
     );
@@ -27,20 +50,21 @@ class MyApp extends StatelessWidget {
 }
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final ConnectionService connectionService;
+  const HomeScreen({super.key, required this.connectionService});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Offset?> points = <Offset?>[];
+  bool _isDrawingMode = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Drawing Canvas'),
+        title: const Text('Mouse Pad'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -58,105 +82,99 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: GestureDetector(
         onPanUpdate: (details) {
-          setState(() {
-            RenderBox renderBox = context.findRenderObject() as RenderBox;
-            points.add(renderBox.globalToLocal(details.globalPosition));
+          widget.connectionService.sendData({
+            'dx': details.delta.dx,
+            'dy': details.delta.dy,
+            'mode': _isDrawingMode ? 'draw' : 'move',
           });
         },
-        onPanStart: (details) {
-          setState(() {
-            RenderBox renderBox = context.findRenderObject() as RenderBox;
-            points.add(renderBox.globalToLocal(details.globalPosition));
-          });
-        },
-        onPanEnd: (details) {
-          setState(() {
-            points.add(null);
-          });
-        },
-        child: CustomPaint(
-          painter: DrawingPainter(points),
-          child: Container(),
+        child: Container(
+          color: _isDrawingMode ? Colors.grey[300] : Colors.white,
+          width: double.infinity,
+          height: double.infinity,
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            _isDrawingMode = !_isDrawingMode;
+          });
+        },
+        child: Icon(_isDrawingMode ? Icons.edit : Icons.mouse),
       ),
     );
   }
 }
 
-class DrawingPainter extends CustomPainter {
-  DrawingPainter(this.points);
-
-  final List<Offset?> points;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    Paint paint = Paint()
-      ..color = Colors.black
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 5.0;
-
-    for (int i = 0; i < points.length - 1; i++) {
-      if (points[i] != null && points[i + 1] != null) {
-        canvas.drawLine(points[i]!, points[i + 1]!, paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(DrawingPainter oldDelegate) => oldDelegate.points != points;
-}
+import 'package:permission_handler/permission_handler.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  final ConnectionService connectionService;
+  const SettingsScreen({super.key, required this.connectionService});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _isBluetoothEnabled = true;
-  bool _isWifiEnabled = true;
+  Future<void> _requestPermissionsAndScan() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.location,
+    ].request();
+
+    if (statuses[Permission.bluetoothScan] == PermissionStatus.granted &&
+        statuses[Permission.bluetoothConnect] == PermissionStatus.granted &&
+        statuses[Permission.location] == PermissionStatus.granted) {
+      widget.connectionService.startScan();
+    } else {
+      // Handle the case when permissions are not granted
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: const Text('Bluetooth Devices'),
       ),
-      body: ListView(
+      body: Column(
         children: [
-          ListTile(
-            title: const Text('Connect to PC'),
-            subtitle: const Text('IP Address: 192.168.1.100'), // Placeholder
-            leading: const Icon(Icons.computer),
-            onTap: () {
-              // TODO: Implement PC connection logic
+          StreamBuilder<bool>(
+            stream: widget.connectionService.isScanning,
+            initialData: false,
+            builder: (c, snapshot) {
+              if (snapshot.data!) {
+                return const LinearProgressIndicator();
+              }
+              return Container();
             },
           ),
-          const Divider(),
-          SwitchListTile(
-            title: const Text('Bluetooth'),
-            subtitle: const Text('Enable or disable Bluetooth'),
-            value: _isBluetoothEnabled,
-            onChanged: (bool value) {
-              setState(() {
-                _isBluetoothEnabled = value;
-              });
-            },
-            secondary: const Icon(Icons.bluetooth),
-          ),
-          SwitchListTile(
-            title: const Text('WiFi'),
-            subtitle: const Text('Enable or disable WiFi'),
-            value: _isWifiEnabled,
-            onChanged: (bool value) {
-              setState(() {
-                _isWifiEnabled = value;
-              });
-            },
-            secondary: const Icon(Icons.wifi),
+          Expanded(
+            child: StreamBuilder<List<ScanResult>>(
+              stream: widget.connectionService.scanResults,
+              initialData: const [],
+              builder: (c, snapshot) => ListView.builder(
+                itemCount: snapshot.data!.length,
+                itemBuilder: (context, index) {
+                  final result = snapshot.data![index];
+                  return ListTile(
+                    title: Text(result.device.name.isNotEmpty
+                        ? result.device.name
+                        : 'Unknown Device'),
+                    subtitle: Text(result.device.id.toString()),
+                    onTap: () => widget.connectionService.connect(result.device),
+                  );
+                },
+              ),
+            ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _requestPermissionsAndScan,
+        child: const Icon(Icons.search),
       ),
     );
   }
