@@ -57,6 +57,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isDrawingMode = false;
+  DateTime? _twoFingerTapStartTime;
 
   @override
   Widget build(BuildContext context) {
@@ -78,54 +79,41 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onPanUpdate: (details) {
-                widget.connectionService.sendData({
-                  'dx': details.delta.dx,
-                  'dy': details.delta.dy,
-                  'mode': _isDrawingMode ? 'draw' : 'move',
-                });
-              },
-              child: Container(
-                color: _isDrawingMode ? Colors.grey[300] : Colors.white,
-                width: double.infinity,
-                height: double.infinity,
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            color: Colors.blueGrey[50],
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    widget.connectionService.sendData({
-                      'dx': 0,
-                      'dy': 0,
-                      'mode': 'left_click',
-                    });
-                  },
-                  child: const Text('Left Click'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    widget.connectionService.sendData({
-                      'dx': 0,
-                      'dy': 0,
-                      'mode': 'right_click',
-                    });
-                  },
-                  child: const Text('Right Click'),
-                ),
-              ],
-            ),
-          ),
-        ],
+      body: GestureDetector(
+        onPanUpdate: (details) {
+          widget.connectionService.sendData({
+            'dx': details.delta.dx,
+            'dy': details.delta.dy,
+            'mode': _isDrawingMode ? 'draw' : 'move',
+          });
+        },
+        onDoubleTap: () {
+          widget.connectionService.sendData({
+            'dx': 0,
+            'dy': 0,
+            'mode': 'double_click',
+          });
+        },
+        onScaleStart: (details) {
+          _twoFingerTapStartTime = DateTime.now();
+        },
+        onScaleEnd: (details) {
+          if (_twoFingerTapStartTime != null &&
+              DateTime.now().difference(_twoFingerTapStartTime!) <
+                  const Duration(milliseconds: 200)) {
+            widget.connectionService.sendData({
+              'dx': 0,
+              'dy
+              ': 0,
+              'mode': 'right_click',
+            });
+          }
+        },
+        child: Container(
+          color: _isDrawingMode ? Colors.grey[300] : Colors.white,
+          width: double.infinity,
+          height: double.infinity,
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

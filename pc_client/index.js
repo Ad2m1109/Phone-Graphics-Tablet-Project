@@ -55,6 +55,11 @@ function processData(jsonString) {
             return;
         }
 
+        if (mode === 'double_click') {
+            robot.mouseClick('left', true);
+            return;
+        }
+
         if (dx === undefined || dy === undefined || mode === undefined) {
             return;
         }
