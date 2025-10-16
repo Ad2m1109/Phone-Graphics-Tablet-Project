@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:phone_graphics_tablet_project/connection_service.dart';
 
 void main() {
@@ -106,8 +104,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-import 'package:permission_handler/permission_handler.dart';
-
 class SettingsScreen extends StatefulWidget {
   final ConnectionService connectionService;
   const SettingsScreen({super.key, required this.connectionService});
@@ -117,19 +113,31 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  Future<void> _requestPermissionsAndScan() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.location,
-    ].request();
+  bool _isListening = false;
 
-    if (statuses[Permission.bluetoothScan] == PermissionStatus.granted &&
-        statuses[Permission.bluetoothConnect] == PermissionStatus.granted &&
-        statuses[Permission.location] == PermissionStatus.granted) {
-      widget.connectionService.startScan();
+  @override
+  void initState() {
+    super.initState();
+    widget.connectionService.connectionStatusStream.listen((status) {
+      if (mounted) {
+        setState(() {
+          // Update UI based on connection status if needed
+        });
+      }
+    });
+  }
+
+  Future<void> _toggleListening(bool value) async {
+    if (value) {
+      await widget.connectionService.startListening();
+      setState(() {
+        _isListening = true;
+      });
     } else {
-      // Handle the case when permissions are not granted
+      await widget.connectionService.stopListening();
+      setState(() {
+        _isListening = false;
+      });
     }
   }
 
@@ -137,44 +145,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bluetooth Devices'),
+        title: const Text('Settings'),
       ),
-      body: Column(
+      body: ListView(
         children: [
+          SwitchListTile(
+            title: const Text('Start USB Server'),
+            subtitle: Text(_isListening ? 'Listening for connection' : 'Server stopped'),
+            value: _isListening,
+            onChanged: _toggleListening,
+            secondary: const Icon(Icons.usb),
+          ),
           StreamBuilder<bool>(
-            stream: widget.connectionService.isScanning,
+            stream: widget.connectionService.connectionStatusStream,
             initialData: false,
             builder: (c, snapshot) {
-              if (snapshot.data!) {
-                return const LinearProgressIndicator();
-              }
-              return Container();
+              final isConnected = snapshot.data ?? false;
+              return ListTile(
+                title: const Text('Connection Status'),
+                subtitle: Text(isConnected ? 'Connected' : 'Disconnected'),
+                leading: Icon(
+                  isConnected ? Icons.power : Icons.power_off,
+                  color: isConnected ? Colors.green : Colors.grey,
+                ),
+              );
             },
           ),
-          Expanded(
-            child: StreamBuilder<List<ScanResult>>(
-              stream: widget.connectionService.scanResults,
-              initialData: const [],
-              builder: (c, snapshot) => ListView.builder(
-                itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
-                  final result = snapshot.data![index];
-                  return ListTile(
-                    title: Text(result.device.name.isNotEmpty
-                        ? result.device.name
-                        : 'Unknown Device'),
-                    subtitle: Text(result.device.id.toString()),
-                    onTap: () => widget.connectionService.connect(result.device),
-                  );
-                },
-              ),
-            ),
-          ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _requestPermissionsAndScan,
-        child: const Icon(Icons.search),
       ),
     );
   }
@@ -193,15 +190,18 @@ class HelpScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         children: const [
           Text(
-            'Setup Instructions',
+            'USB Mode Setup Instructions',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 10),
           Text(
-            '1. Connect your phone and PC to the same WiFi network.\n'
-            '2. Open the PGT server application on your PC.\n'
-            '3. The app will automatically detect the server, or you can enter the IP address manually in the settings.\n'
-            '4. Once connected, the drawing canvas will be active.',
+            '1. Enable Developer Options and USB Debugging on your Android phone.\n'
+            '2. Install Android Debug Bridge (adb) on your PC.\n'
+            '3. Connect your phone to your PC with a USB cable.\n'
+            '4. Open a terminal on your PC and run the command: adb forward tcp:38383 tcp:38383\n'
+            '5. Run the PC client application.\n'
+            '6. In this app, go to Settings and enable \'Start USB Server\'.\n'
+            '7. The PC client should now show a \'Phone connected\' message.',
           ),
           SizedBox(height: 20),
           Text(
@@ -210,17 +210,7 @@ class HelpScreen extends StatelessWidget {
           ),
           SizedBox(height: 10),
           Text(
-            'Use your finger or a stylus to draw on the canvas. The drawing will appear in real-time on your PC. Use the toolbar at the bottom to change tools, colors, and other settings.',
-          ),
-          SizedBox(height: 20),
-          Text(
-            'Frequently Asked Questions (FAQ)',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 10),
-          Text(
-            'Q: I can\'t connect to my PC.\n'
-            'A: Make sure both devices are on the same WiFi network and that the server application is running on your PC. Check your firewall settings to ensure the PGT application is not blocked.',
+            'Use your finger to move the mouse cursor. Use the button on the screen to toggle between move and draw modes.',
           ),
         ],
       ),

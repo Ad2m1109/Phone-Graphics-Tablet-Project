@@ -1,0 +1,19 @@
+{
+  "name": "phone-graphics-tablet-pc-client",
+  "version": "1.0.0",
+  "description": "PC client for the Phone Graphics Tablet app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "ble",
+    "mouse",
+    "graphics-tablet"
+  ],
+  "author": "Gemini",
+  "license": "ISC",
+  "dependencies": {
+    "robotjs": "^0.6.0"
+  }
+}
