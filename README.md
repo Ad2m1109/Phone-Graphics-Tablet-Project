@@ -1,63 +1,57 @@
-# Phone Graphics Tablet (PGT) - Mobile to PC Drawing Interface
+# Phone Graphics Tablet
 
-A cross-platform application that transforms smartphones into graphic tablets, allowing users to draw on their phone screen and see the results in real-time on their PC. The system enables cost-effective digital drawing by leveraging existing mobile devices.
+Use your Android phone as a USB-connected mouse and graphics tablet for your PC.
 
-## Problem Statement
+## Features
 
-Professional graphic tablets are expensive ($100-$2000+), creating barriers for:
+-   Relative mouse movement.
+-   Left-click (via double-tap).
+-   Right-click (via two-finger tap).
+-   Click-and-drag mode.
 
-- Digital art students
-- Hobbyist artists
-- Beginner digital creators
-- Professionals needing secondary tablets
+---
 
-## Solution
+## How to Use (Setup Instructions)
 
-Utilize smartphone touchscreens as input devices, transmitting drawing data to PC software that mimics professional tablet functionality.
+### 1. PC Prerequisite: Install ADB
 
-## High-Level Architecture
+You need the Android Debug Bridge (`adb`) on your computer.
 
-[Mobile Device] ←→ [Network: WiFi/Bluetooth] ←→ [PC Application] ←→ [Digital Art Software]
+-   Download the "SDK Platform-Tools" for your operating system from the official Android developer website: [https://developer.android.com/tools/releases/platform-tools](https://developer.android.com/tools/releases/platform-tools)
+-   Unzip the file. You will need to run commands from a terminal inside the unzipped `platform-tools` folder.
 
-## Component Diagram
+### 2. Phone Prerequisite: Enable USB Debugging
 
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Mobile App                 │───▶│           Communication   │───▶│   PC Server                           │
-│  (Flutter)      │    │   Layer (Socket) │    │   (Python)      │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│ Touch Input                        │     │ Data Serialization│                      │ Drawing Render  │
-│ Processing      │                         │   (JSON/Protobuf) │                     │ & Display       │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+You need to enable "USB Debugging" on your Android phone.
 
-## Technical Specifications
+-   Go to **Settings -> About phone**.
+-   Tap on the **"Build number"** seven times until it says "You are now a developer!".
+-   Go back to the main Settings menu and find the new **"Developer options"** menu.
+-   Inside "Developer options", find and enable **"USB debugging"**.
 
-### Mobile Application (Flutter)
+### 3. Running the Application
 
-- **Platform**: Android 8.0+ (API 26+), iOS 12+
-- **Framework**: Flutter 3.0+
-- **Dependencies**:
-    - `flutter_bluetooth_serial` for Bluetooth
-    - `socket_io_client` for WiFi communication
-    - `shared_preferences` for local storage
-    - `permission_handler` for device permissions
+1.  **Connect your phone** to your PC with a USB cable. A prompt might appear on your phone asking you to "Allow USB debugging". Check "Always allow" and tap **Allow**.
 
-### PC Server Application (Python)
+2.  **On your Phone**, start this application.
 
-- **Platform**: Windows 10/11, macOS 10.15+, Linux Ubuntu 18.04+
-- **Python Version**: 3.8+
-- **Dependencies**:
-    - `pygame` for rendering
-    - `pyautogui` for system control
-    - `websockets` for network communication
-    - `pynput` for input simulation
-    - `opencv-python` for advanced features
+3.  In the phone app, go to **Settings** and turn **ON** the **"Start USB Server"** switch.
 
-## Data Protocol Specification
+4.  **On your PC**, open a terminal and run the `adb forward` command to create the connection tunnel:
+    ```bash
+    adb forward tcp:38383 tcp:38383
+    ```
 
-- **Primary**: WebSocket over WiFi
-- **Fallback**: RFCOMM over Bluetooth
-- **Port**: 8888 (configurable)
-- **Data Format**: JSON
+5.  **On your PC**, open a second terminal, navigate to the `pc_client` directory within this project, and run the client:
+    ```bash
+    node index.js
+    ```
+
+The PC client terminal should now print `[Client] Connected to phone server.`, and you can control your PC's mouse from your phone.
+
+---
+
+## Project Components
+
+-   **Flutter App:** The Android application that captures touch input.
+-   **Node.js PC Client:** A lightweight script that runs on the PC, receives data from the phone, and controls the mouse.
