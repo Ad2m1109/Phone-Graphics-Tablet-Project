@@ -78,19 +78,54 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: GestureDetector(
-        onPanUpdate: (details) {
-          widget.connectionService.sendData({
-            'dx': details.delta.dx,
-            'dy': details.delta.dy,
-            'mode': _isDrawingMode ? 'draw' : 'move',
-          });
-        },
-        child: Container(
-          color: _isDrawingMode ? Colors.grey[300] : Colors.white,
-          width: double.infinity,
-          height: double.infinity,
-        ),
+      body: Column(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onPanUpdate: (details) {
+                widget.connectionService.sendData({
+                  'dx': details.delta.dx,
+                  'dy': details.delta.dy,
+                  'mode': _isDrawingMode ? 'draw' : 'move',
+                });
+              },
+              child: Container(
+                color: _isDrawingMode ? Colors.grey[300] : Colors.white,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            color: Colors.blueGrey[50],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    widget.connectionService.sendData({
+                      'dx': 0,
+                      'dy': 0,
+                      'mode': 'left_click',
+                    });
+                  },
+                  child: const Text('Left Click'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    widget.connectionService.sendData({
+                      'dx': 0,
+                      'dy': 0,
+                      'mode': 'right_click',
+                    });
+                  },
+                  child: const Text('Right Click'),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

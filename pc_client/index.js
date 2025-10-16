@@ -45,6 +45,16 @@ function processData(jsonString) {
         const jsonData = JSON.parse(jsonString);
         const { dx, dy, mode } = jsonData;
 
+        if (mode === 'left_click') {
+            robot.mouseClick('left');
+            return;
+        }
+
+        if (mode === 'right_click') {
+            robot.mouseClick('right');
+            return;
+        }
+
         if (dx === undefined || dy === undefined || mode === undefined) {
             return;
         }
