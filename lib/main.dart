@@ -80,10 +80,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: GestureDetector(
-        onPanUpdate: (details) {
+        onScaleUpdate: (details) {
           widget.connectionService.sendData({
-            'dx': details.delta.dx,
-            'dy': details.delta.dy,
+            'dx': details.focalPointDelta.dx,
+            'dy': details.focalPointDelta.dy,
             'mode': _isDrawingMode ? 'draw' : 'move',
           });
         },
@@ -103,8 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Duration(milliseconds: 200)) {
             widget.connectionService.sendData({
               'dx': 0,
-              'dy
-              ': 0,
+              'dy': 0,
               'mode': 'right_click',
             });
           }
